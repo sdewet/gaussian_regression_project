@@ -1,0 +1,13 @@
+*.pdf
+# Generated latex files
+*.aux
+*.pdf
+*.log
+*.out
+*.nav
+*.toc
+*.snm
+*.vrb
+
+# Text editor save files
+*.swp

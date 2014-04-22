@@ -1,0 +1,82 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips14submit_e,times}
+\usepackage{hyperref}
+\usepackage{url}
+%\documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+\title{Formatting Instructions for NIPS 2014}
+
+
+\author{
+Stephanie deWet \\
+Department of Computer Sciences\\
+University of Wisconsin - Madison \\
+Madison, WI 53705 \\
+\texttt{sdewet@cs.wisc.edu} \\
+\And
+Saswati De \\
+Department of Computer Sciences\\
+University of Wisconsin - Madison \\
+Madison, WI 53705 \\
+\texttt{@cs.wisc.edu} \\
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+%\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+\end{abstract}
+
+\section{Introduction}
+Financial data is fun.
+
+\section{Initial Data Processing}
+Our data set consists of information collected on a single stock, including instantaneous stock prices and instantaneous values of 26 parameters ($P$) known to have some affect on the price.
+These values are taken at many different time stamps.
+Our goal is to predict the stock price in the near future, given current values of the parameters.
+
+First, we need to create labeled data to use in training our models.
+We use two strategies to do this.
+
+\subsection{Strategy 1}
+We sort the data set in increasing time.
+For each line, we define $\delta$, the future change in stock price, to be the current stock price subtracted from the next stock price in the future.
+We will attempt to build a model which calculates $\delta_t$ when given $P_t$, the values of the 26 parameters at time $t$.
+
+% Note to self: this is done in strategy 
+
+
+
+
+
+
+\subsubsection*{Acknowledgments}
+Thanks to Jerry Zhu for an excellent class, and to Rasmussen and Willams for their excellent book.
+
+
+\subsubsection*{References}
+
+\small{
+[1] Alexander, J.A. \& Mozer, M.C. (1995) Template-based algorithms
+for connectionist rule extraction. In G. Tesauro, D. S. Touretzky
+and T.K. Leen (eds.), {\it Advances in Neural Information Processing
+Systems 7}, pp. 609-616. Cambridge, MA: MIT Press.
+
+[2] Bower, J.M. \& Beeman, D. (1995) {\it The Book of GENESIS: Exploring
+Realistic Neural Models with the GEneral NEural SImulation System.}
+New York: TELOS/Springer-Verlag.
+
+[3] Hasselmo, M.E., Schnell, E. \& Barkai, E. (1995) Dynamics of learning
+and recall at excitatory recurrent synapses and cholinergic modulation
+in rat hippocampal region CA3. {\it Journal of Neuroscience}
+{\bf 15}(7):5249-5262.
+}
+
+\end{document}
