@@ -1,4 +1,4 @@
-function [y, X] = readProcessedFile()
+function [y, X] = readProcessedData()
 % Reads in data from the file and stores it as a matrix.
 addpath '../data/';
 

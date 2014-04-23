@@ -2,7 +2,7 @@
 
 # Creates new processed data files with the information we actually want.
 # New data file has the following format:
-# <Difference in stock value in future> <26 parameters' values at present (this does not include time, current price, or ask/bid data)>
+# <Difference in stock value in future> <27 parameters' values at present (this does not include time, current price, or ask/bid data)>
 
 
 SOURCE="${BASH_SOURCE[0]}"
