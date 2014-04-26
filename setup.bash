@@ -15,6 +15,6 @@ then
 fi
 
 echo "Create processed data file."
-./code/create_processed_data.bash
+./scripts/create_processed_data.bash
 echo "Done."
 echo "Run readProcessedData in matlab to get the data we will use in our models."
