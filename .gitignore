@@ -1,0 +1,11 @@
+# Directories created through processing
+data/*
+proposal/*
+workdir/*
+
+# zip files
+*.zip
+
+# Autosave files
+*.swp
+*.m~
