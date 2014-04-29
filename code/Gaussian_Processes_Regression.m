@@ -1,4 +1,4 @@
-function Gaussian_Processes_Regression()
+function Gaussian_Processes_Regression(windowSize, cov_type)
 
 %Call readProcessedData to get our data from the file into y and X 
 [y, X] = readProcessedData();
@@ -39,31 +39,69 @@ end
 
 Design_X = Scaled_X'; Design_y = Scaled_y';
 
-%Select the hyper-parameters
-sigma_f = 1.0; sigma_n = 0.1;
-l = ones(size(Design_X,1),1);   %All characteristic length scales are initialized to 1
+X_Window = Design_X(:,1:windowSize); y_Window = Design_y(1:windowSize);
+ctr = windowSize;
 
-%Build the Gram matrix, K
-num_examples = size(Design_X,2);
-K = ones(num_examples);
-for i=1:num_examples
-    for j=i:num_examples        
-        K(i,j) = Squared_Exponential(X(:,i), X(:,j), sigma_f, l, diag_elem);   
-        if (i == j)
-            K(i,j) = K(i,j) + sigma_n^2;  %Add noise to the diag elem of K
-        else
-            K(j,i) = K(i,j);  %K should be symmetric
+while (ctr < size(Design_X,2))
+    
+    %Select the hyper-parameters
+    sigma_f = 1.0; sigma_n = 0.1;
+    l = ones(size(X_Window,1),1)';   %All characteristic length scales are initialized to 1
+
+    %Build the Gram matrix, K
+    num_examples = size(X_Window,2);
+    K = ones(num_examples);
+    for i=1:num_examples
+        for j=i:num_examples  
+            switch cov_type
+                case 1
+                    K(i,j) = Squared_Exponential(X_Window(:,i), X_Window(:,j), sigma_f, l);
+                case 2
+                    K(i,j) = Ornstein_Uhlenbeck(X_Window(:,i), X_Window(:,j), sigma_f, l);
+                case 3
+                    K(i,j) = Matern(X_Window(:,i), X_Window(:,j), sigma_f, l, (5/2));
+                case 4
+                    K(i,j) = Matern(X_Window(:,i), X_Window(:,j), sigma_f, l, (3/2));
+                otherwise
+                    error('Wrong covariance function type. Please try again!');                    
+            end
+            if (i == j)
+                K(i,j) = K(i,j) + sigma_n^2;  %Add noise to the diag elem of K
+            else
+                K(j,i) = K(i,j);  %K should be symmetric
+            end
         end
     end
-end
 
+    %Train the hyperparameters
+
+
+    %Predict the change in stock price for the next time instant
+    
+    
+    %
+    ctr = ctr+1;
+    X_Window = [X_Window, Design_X(:,ctr)];
+    X_Window(:,1)=[];
+
+end
 end
 
 function k_elem = Squared_Exponential(x_p, x_q, sigma_f, l)
-x_diff
-k_elem = sigma_f^2 * exp(
+l = l.^(-2); M = diag(l);
+k_elem = sigma_f^2 * exp( (-1/2) * (x_p - x_q)' * M * (x_p - x_q));
 end
 
 function k_elem = Ornstein_Uhlenbeck (x_p, x_q, sigma_f, l)
+l = l.^(-2); M = diag(l);
+k_elem = sigma_f^2 * exp( -1 * sqrt((x_p - x_q)' * M * (x_p - x_q)));
+end
 
+function k_elem = Matern(x_p, x_q, sigma_f, l, nu)
+l = l.^(-2); M = diag(l);
+if nu == (5/2)
+    k_elem = sigma_f^2 * ( 1 + sqrt(5 * ((x_p - x_q)' * M * (x_p - x_q))) + (5/3) * ((x_p - x_q)' * M * (x_p - x_q))) * exp( -1 * sqrt(5 * ((x_p - x_q)' * M * (x_p - x_q))));
+elseif nu == (3/2)
+    k_elem = sigma_f^2 * ( 1 + sqrt(3 * ((x_p - x_q)' * M * (x_p - x_q)))) * exp( -1 * sqrt(3 * ((x_p - x_q)' * M * (x_p - x_q))));
+end
 end
