@@ -42,6 +42,7 @@ Design_X = Scaled_X'; Design_y = Scaled_y';
 X_Window = Design_X(:,1:windowSize); y_Window = Design_y(1:windowSize);
 ctr = windowSize;
 
+Predicted_Data = [];
 while (ctr < size(Design_X,2))
     
     %Select the hyper-parameters
@@ -78,14 +79,37 @@ while (ctr < size(Design_X,2))
 
     %Predict the change in stock price for the next time instant
     
+    k_star = ones(num_examples,1);
+    x_star = Design_X(:,(ctr+1));
+    for i=1:num_examples  
+        switch cov_type
+            case 1
+                k_star(i) = Squared_Exponential(X_Window(:,i), x_star, sigma_f, l);
+            case 2
+                k_star(i) = Ornstein_Uhlenbeck(X_Window(:,i), x_star, sigma_f, l);
+            case 3
+                k_star(i) = Matern(X_Window(:,i), x_star, sigma_f, l, (5/2));
+            case 4
+                k_star(i) = Matern(X_Window(:,i), x_star, sigma_f, l, (3/2));
+            otherwise
+                error('Wrong covariance function type. Please try again!');                    
+        end
+    end
+    L = cholesky(K);
+    alpha = L'\(L\y_Window);
+    predicted_y = k_star' * alpha;      % Our predicted change in price is the mean of the gaussian posterior
+    Predicted_Data = [Predicted_Data; [predicted_y, x_star']];
+    fprintf('Finished prediction of Data Point no. %d\n', (ctr+1));
     
     %
     ctr = ctr+1;
     X_Window = [X_Window, Design_X(:,ctr)];
     X_Window(:,1)=[];
+    y_Window = [y_Window, Design_y(ctr)];
+    y_Window(1) = [];
 
-end
-end
+end %end of while
+end %end of function
 
 function k_elem = Squared_Exponential(x_p, x_q, sigma_f, l)
 l = l.^(-2); M = diag(l);
