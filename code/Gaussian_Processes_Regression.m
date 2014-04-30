@@ -95,8 +95,8 @@ while (ctr < size(Design_X,2))
                 error('Wrong covariance function type. Please try again!');                    
         end
     end
-    L = cholesky(K);
-    alpha = L'\(L\y_Window);
+    L = chol(K, 'lower');
+    alpha = L'\(L\y_Window');
     predicted_y = k_star' * alpha;      % Our predicted change in price is the mean of the gaussian posterior
     Predicted_Data = [Predicted_Data; [predicted_y, x_star']];
     fprintf('Finished prediction of Data Point no. %d\n', (ctr+1));
