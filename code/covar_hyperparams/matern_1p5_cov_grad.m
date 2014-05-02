@@ -1,4 +1,5 @@
-function grad = exponential_cov_grad(X, y, theta, K_inv)
+function grad = matern_1p5_cov_grad(X, y, theta, K_inv)
+% Gradient of Matern covariance (nu = 3/2)
 
 alpha = K_inv * y;
 term1 = (alpha * alpha' - K_inv);
@@ -11,14 +12,7 @@ for h = 1:numel(theta)
 	for i = 1:N
 		for j = i:N
 			if h <= d
-				if (i == j)
-					% So, add a tiny bit of noise to X_i.
-					% Not sure that this is legit, really.
-					x_temp = X(:,j)+1e-6.*randn(d,1);
-					dK(j,i) = dk_func_ll(X(:,i), x_temp, theta, h);
-				else
-					dK(j,i) = dk_func_ll(X(:,i), X(:,j), theta, h);
-				end
+				dK(j,i) = dk_func_ll(X(:,i), X(:,j), theta, h);
 			elseif h == d + 1
 				dK(j,i) = dk_func_sigma_f(X(:,i), X(:,j), theta);
 			elseif h == d + 2
@@ -34,7 +28,7 @@ end
 
 
 function out = dk_func_ll(x1, x2, theta, j)
-% Derivative of Matern covariance function with respect to l[j] hyperparameter
+% Derivative of Matern covariance (nu = 3/2) function with respect to l[j] hyperparameter
 %    x1 - first coordinate
 %    x2 - second coordinate
 %    theta - the array of coordinates that can be changed.
@@ -46,17 +40,17 @@ function out = dk_func_ll(x1, x2, theta, j)
 D = numel(x1);
 
 d = x1 - x2;
-u = sqrt(d' * diag(1 ./ (theta(1:D) .^2)) * d);
+u = sqrt(3 * d' * diag(1 ./ theta(1:D) .^2) * d);
 
-% d/dl sigma_f * exp(-u) = sigma_f * exp(-u) * -(1/(2 * sqrt(sum(d^2/ll^2)))) * (-2 d_j^2 / l_j^3)
-
-out = theta(D+1) * (exp(-u) / u) * (d(j)^2 / theta(j)^3);
+% d/dl sigma_f * (1 +u) * exp(-u) = sigma_f * -u * exp(-u) * -(sqrt(3)/(2 * sqrt(sum(d^2/ll^2)))) * (-2 d_j^2 / l_j^3)
+%          = sigma_f * exp(-u) * (3 d_j^2 / l_j^3)
+out = 3 * theta(D+1) * exp(-u) * (d(j)^2 / theta(j)^3);
 
 
 
 
 function out = dk_func_sigma_f(x1, x2, theta)
-% Derivative of Matern covariance function with respect to sigma_f hyperparameter
+% Derivative of Matern covariance function (nu = 3/2) with respect to sigma_f hyperparameter
 %    x1 - first coordinate
 %    x2 - second coordinate
 %    theta - the array of coordinates that can be changed.
@@ -65,15 +59,16 @@ function out = dk_func_sigma_f(x1, x2, theta)
 %       element d+2: var_n (= sigma_n^2)
 
 D = numel(x1);
-d = x1 - x2;
 sigma_f = sqrt(theta(D+1));
-out = 2 * sigma_f * exp( - sqrt( d' * diag(1 ./ (theta(1:D) .^2)) * d ));
+d = x1 - x2;
+u = sqrt(3 * d' * diag(1 ./ theta(1:D) .^2) * d);
+out = 2 * sigma_f * (1 + u) * exp(-u);
 
 
 
 
 function out = dk_func_sigma_n(theta, on_diagonal)
-% Derivative of Matern covariance function with respect to sigma_f hyperparameter
+% Derivative of Matern covariance function (nu = 3/2) with respect to sigma_f hyperparameter
 %    theta - the array of coordinates that can be changed.
 %       elements 1:d :  l, a vector of scaling params
 %       element d+1: var_f (= sigma_f^2)
