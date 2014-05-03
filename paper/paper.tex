@@ -2,6 +2,7 @@
 \usepackage{nips14submit_e,times}
 \usepackage{hyperref}
 \usepackage{url}
+\usepackage{amsmath,amssymb}
 %\documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
 
 
@@ -19,12 +20,23 @@ Saswati De \\
 Department of Computer Sciences\\
 University of Wisconsin - Madison \\
 Madison, WI 53705 \\
-\texttt{@cs.wisc.edu} \\
+\texttt{sde@cs.wisc.edu} \\
+}
 
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
 %\nipsfinalcopy % Uncomment for camera-ready version
+
+\def\bfx{\mathbf x}
+\def\bfy{\mathbf y}
+\def\bftheta{\mathbf \theta}
+\def\bfl{\mathbf \mathcal l}
+\def\l{\mathcal l}
+\def\R{\mathbb R}
+\def\diag{\mbox{ diag }}
+
+
 
 \begin{document}
 
@@ -50,6 +62,47 @@ We will attempt to build a model which calculates $\delta_t$ when given $P_t$, t
 
 % Note to self: this is done in strategy 
 
+% TODO:  Insert a paragraph about normalization of data.
+
+\section{Covariance Functions}
+We consider 4 different covariance functions, all of which can be parameterized in terms of the hyperparameters $\bftheta = \{\bfl, \sigma_n^2 \sigma_f^2\}$:
+Let
+\begin{equation}
+	u = \left( \left( \bfx_p - \bfx_q \right)^\top \diag(\bfl)^{-2} \left( \bfx_p - \bfx_q \right) \right)^{1/2}
+\end{equation}
+
+Then, the covariance functions are:
+\begin{align}
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- \frac{1}{2} u^2} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Squared Exponential}   \\
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Exponential}   \\
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{3} u \right) \exp{- sqrt{3}  u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Matern ($\nu = \frac{3}{2}$) }   \\
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{5} u \right) + 5 u^2) \exp{- \sqrt{5} u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Matern ($\nu = \frac{5}{2}$) }   \\
+\end{align}
+
+$\sigma_n^2$ and $\sigma_f^2$ are the noise and signal level parameters, respectively, and $\l_1, \dots, \l_D$ are characteristic length-scales.
+The covariance matrix $K_y$ is given by $[K_y]_{pq} = k(\bfx_p, \bfx_q)$.
+We can think of these length-scales as a measure of the irrelevance of the associated feature; a large value of $\l_i$ means that the $i$-th parameter of the feature vector has very little effect on the resultant covariance matrix.
+This is a type of automatic relevance determination (ARD).
+
+\subsection{Tuning the hyperparameters}
+We tuned the hyperparameters by maximizing the log marginal likelihood, 
+\begin{equation}
+	\log p(\bfy | X, \bftheta) = - \frac{1}{2} \bfy^\top K_y^{-1} \bfy - \frac{1}{2} \log \| K_y \| - \frac{n}{2} \log (2 \pi)
+\end{equation}
+
+Russell and Williams state that the maximum of this quantity is generally more pronounced for larger numbers of data points.
+They also note that this function is not concave, and so there could be multiple local optima.
+However, they suggest that for larger data sets, one local optimum will generally be orders of magnitude more probable than the others, and that this can generally be assumed to be the correct choice of hyperparameters.
+
+For all except the exponential function, we calculate the gradient $\frac{\partial K} {\partial \bftheta}$ and use a gradient-based descent method.
+
+Note that $K_y \in \R^{n \times n}$ must be recalculated at each step of the optimization.
+As the size of the data set grows, this becomes increasingly intractible.
+Therefore, we follow the suggestion of Russell \& Williams in their example (Ch 2), and calculate the hyperparameters for a smaller subset of the data.
+
+We are unsure whether there are any temporal trends within our data, and so we randomly select values from the training set.
+However, we expect that the temporal effects should not be too large.
+This should smear out any temporal dependance, leaving us with time-averaged values of the hyperparameters.
 
 
 
