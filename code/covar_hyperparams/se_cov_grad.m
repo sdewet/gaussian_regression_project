@@ -32,18 +32,18 @@ function out = dk_func_ll(x1, x2, theta, j)
 %    x2 - second coordinate
 %    theta - the array of coordinates that can be changed.
 %       elements 1:d :  l, a vector of scaling params
-%       element d+1: var_f (= sigma_f^2)
-%       element d+2: var_n (= sigma_n^2)
+%       element d+1: sigma_f
+%       element d+2: sigma_n
 %    j - hyperparameter
 
 D = numel(x1);
 
 d = x1 - x2;
-u = d' * diag(1 ./ (theta(1:D) .^2)) * d;
+u = 0.5 * d' * diag(1 ./ (theta(1:D) .^2)) * d;
 
-% d/dl sigma_f * exp(-u) = sigma_f * exp(-u) * -(-2 d_j^2 / l_j^3)
+% d/dl sigma_f^2 * exp(-u) = sigma_f^2 * exp(-u) * -1/2 * (-2 d_j^2 / l_j^3)
 
-out = 2 * theta(D+1) * exp(-u) * (d(j)^2 / theta(j)^3);
+out = theta(D+1)^2 * exp(-u) * (d(j)^2 / theta(j)^3);
 
 
 
@@ -54,13 +54,13 @@ function out = dk_func_sigma_f(x1, x2, theta)
 %    x2 - second coordinate
 %    theta - the array of coordinates that can be changed.
 %       elements 1:d :  l, a vector of scaling params
-%       element d+1: var_f (= sigma_f^2)
-%       element d+2: var_n (= sigma_n^2)
+%       element d+1: sigma_f
+%       element d+2: sigma_n
 
 D = numel(x1);
 d = x1 - x2;
-sigma_f = sqrt(theta(D+1));
-out = 2 * sigma_f * exp( - d' * diag(1 ./ (theta(1:D) .^2)) * d );
+sigma_f = theta(D+1);
+out = 2 * sigma_f * exp( - 0.5 * d' * diag(1 ./ (theta(1:D) .^2)) * d );
 
 
 
@@ -69,12 +69,12 @@ function out = dk_func_sigma_n(theta, on_diagonal)
 % Derivative of SE covariance function with respect to sigma_f hyperparameter
 %    theta - the array of coordinates that can be changed.
 %       elements 1:d :  l, a vector of scaling params
-%       element d+1: var_f (= sigma_f^2)
-%       element d+2: var_n (= sigma_n^2)
+%       element d+1: sigma_f
+%       element d+2: sigma_n
 %    on_diagonal - true if x1 = x2 and this element is on the diagonal of the K matrix.
 
 if (on_diagonal == true)
-	sigma_n = sqrt(theta(end));
+	sigma_n = theta(end);
 	out = 2 * sigma_n;
 else
 	out = 0;
