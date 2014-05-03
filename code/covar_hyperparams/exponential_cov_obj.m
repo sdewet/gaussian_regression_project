@@ -1,7 +1,12 @@
 function obj = exponential_cov_obj( X, y, theta)
 % Negative Marginal likelihood of exponential covariance (objective function to be MINimized)
 
-K = K_mat(X, theta);
+if exist('debug.txt','file')
+	theta'
+	keyboard
+end
+
+K = K_mat(theta);
 try
 	Kinv = pinv(K);
 catch exception

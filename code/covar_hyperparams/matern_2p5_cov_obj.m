@@ -1,6 +1,11 @@
 function [obj, grad] = matern_2p5_cov_obj( X, y, theta)
 % Negative Marginal likelihood of Matern covariance (nu = 5/2) (objective function to be MINimized)
 
+if exist('debug.txt','file')
+	theta'
+	keyboard
+end
+
 K = K_mat(X, theta);
 try
 	Kinv = pinv(K);

@@ -1,6 +1,11 @@
 function [obj, grad] = se_cov_obj( X, y, theta)
 % Negative Marginal likelihood of squared exponential covariance (SE) (objective function to be MINimized)
 
+if exist('debug.txt','file')
+	theta'
+	keyboard
+end
+
 K = K_mat(X, theta);
 try
 	Kinv = pinv(K);
@@ -9,9 +14,11 @@ catch exception
 end
 
 [d, N] = size(X);
+
+%theta'
+%fprintf('term 1: %f, term 2: %f, term 3: %f\n', -0.5*y'*Kinv*y, -0.5*sum(log(svd(K))), -N/2*log(2*pi));
 % sum(log(svd(K))) is equivalent to log(det(K)), but less likely to blow up
 obj = - 0.5 * y' * Kinv * y - 0.5 * sum(log(svd(K))) - N/2 * log(2 * pi);
-%fprintf('term 1: %f, term 2: %f, term 3: %f\n', -0.5*y'*Kinv*y, -0.5*sum(log(svd(K))), -N/2*log(2*pi));
 grad = se_cov_grad(X, y, theta, Kinv);
 
 % Use negative of obj and grad, since we have to minimize
