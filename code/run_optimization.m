@@ -1,4 +1,4 @@
-%function [theta, y_val] = run_optimization()
+function [theta, y_val] = run_optimization()
 
 %Call readProcessedData to get our data from the file into y and X
 [y, X] = readProcessedData();
@@ -17,29 +17,74 @@ end
 
 % Run the optimizations several times
 D = size(X, 2);
-%theta = zeros(D+2,4,4);
-%fval = zeros(4,4);
+theta = zeros(D+2,4,4);
+fval = zeros(4,4);
 
-for cov_type = 2:4
- 	[theta(:, cov_type, 1), fval(cov_type, 1)] = optimize_hyperparams( Scaled_X(1:100,:), Scaled_y(1:100), cov_type);
- 	[theta(:, cov_type, 2), fval(cov_type, 2)] = optimize_hyperparams( Scaled_X(101:200,:), Scaled_y(101:200), cov_type);
- 	randSet = randperm(nData, 100);
- 	[theta(:, cov_type, 3), fval(cov_type, 3)] = optimize_hyperparams( Scaled_X(randSet,:), Scaled_y(randSet), cov_type);
+randSet = randperm(N, 100);
 
-	% Also - check to see if this makes things better.  (Scale the sample separately.)
-	% This would mean that we would scale 1-10000, then rescale at each time step.
-	SampleSize = 100;
-	Scaled_X = zeros(SampleSize, D);
-	mean_y = mean(y(1:SampleSize));
-	stdev_y = std(y(1:SampleSize));
-	mean_X = mean(X(1:SampleSize, :),1);
-	stdev_X = std(X(1:SampleSize, :),0,1);
-	Scaled_y = y - mean_y;
-	for i = 1:N
-		Scaled_X(i,:) = (X(i,:) - mean_X) ./ stdev_X;
-	end
-	[theta(:, cov_type, 4), fval(cov_type, 4)] = optimize_hyperparams( Scaled_X(1:100,:), Scaled_y(1:100), cov_type);
+% Specially scaled 1-100
+SampleSize = 100;
+local_Scaled_X = zeros(SampleSize, D);
+local_mean_y = mean(y(1:SampleSize));
+local_stdev_y = std(y(1:SampleSize));
+local_mean_X = mean(X(1:SampleSize, :),1);
+local_stdev_X = std(X(1:SampleSize, :),0,1);
+local_Scaled_y = y - local_mean_y;
+for i = 1:N
+    local_Scaled_X(i,:) = (X(i,:) - local_mean_X) ./ local_stdev_X;
+end
 
+for cov_type = 1:1
+    for data_set = 1:1
+        switch data_set
+            case 1 % Data between 1 and 100
+                set = 1:100;
+                X_set = Scaled_X(set,:);
+                y_set = Scaled_y(set);
+            case 2 % Data between 10001 and 10100
+                set = 10001:10100;
+                X_set = Scaled_X(set,:);
+                y_set = Scaled_y(set);
+            case 3 % Randomly selected data
+                set = randSet;
+                X_set = Scaled_X(set,:);
+                y_set = Scaled_y(set);
+            case 4 % Data between 1 and 100, normalized specifically for this case
+                set = 1:100;
+                X_set = local_Scaled_X(set, :);
+                y_set = local_Scaled_y;
+        end
+        local_optima = [];
+        local_optimizers = [];
+        lastNovel = 1; % iteration where last optimum was a new spot!
+        iter = 0;
+        max_iter = 1;
+        while (iter - lastNovel < 3 && iter < max_iter)
+            
+            if exist('debug.txt','file')
+                fprintf('currently on iter %f.\n', int(iter))
+                keyboard
+            end
+            
+            iter = iter + 1;
+            [t, f] = optimize_hyperparams(X_set, y_set, cov_type);
+            
+            local_optima(iter) = f;
+            local_optimizers(:,iter) = t;
+            novel = true;
+            for i = 1:iter-1
+                if (norm(t - local_optimizers(:,i)) < 1e-2)
+                    novel = false;
+                end
+            end
+            if (novel == true)
+                lastNovel = iter;
+            end
+        end
+        [m, i] = max(local_optima);
+        theta(:, cov_type, data_set) = m;
+        fval(:, cov_type, data_set) = local_optima(:,i);
+    end
 end
 
 save('optimized_theta', 'theta')
