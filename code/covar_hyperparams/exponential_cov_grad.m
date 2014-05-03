@@ -1,10 +1,11 @@
-function grad = exponential_cov_grad(X, y, theta, K_inv)
+function grad = exponential_cov_grad(y, theta, K_inv)
 
 alpha = K_inv * y;
 term1 = (alpha * alpha' - K_inv);
 
 grad = zeros(numel(theta), 1);
-[d,N] = size(X);
+global X_prime;
+N = size(X_prime,1);
 
 for h = 1:numel(theta)
 	dK = zeros(N,N);
@@ -14,13 +15,13 @@ for h = 1:numel(theta)
 				if (i == j)
 					% So, add a tiny bit of noise to X_i.
 					% Not sure that this is legit, really.
-					x_temp = X(:,j)+1e-6.*randn(d,1);
-					dK(j,i) = dk_func_ll(X(:,i), x_temp, theta, h);
+					x_temp = 1e-6.*randn(d,1);
+					dK(j,i) = dk_func_ll(x_temp, theta, h);
 				else
-					dK(j,i) = dk_func_ll(X(:,i), X(:,j), theta, h);
+					dK(j,i) = dk_func_ll(reshape(X_prime(i,j,:),D,1), theta, h);
 				end
 			elseif h == d + 1
-				dK(j,i) = dk_func_sigma_f(X(:,i), X(:,j), theta);
+				dK(j,i) = dk_func_sigma_f(reshape(X_prime(i,j,:),D,1), theta);
 			elseif h == d + 2
 				dK(j,i) = dk_func_sigma_n(theta, (i==j) );
 			end
@@ -33,19 +34,16 @@ end
 
 
 
-function out = dk_func_ll(x1, x2, theta, j)
+function out = dk_func_ll(d, theta, j)
 % Derivative of Matern covariance function with respect to l[j] hyperparameter
-%    x1 - first coordinate
-%    x2 - second coordinate
+%    d - difference in coordinates
 %    theta - the array of coordinates that can be changed.
 %       elements 1:d :  l, a vector of scaling params
 %       element d+1: sigma_f
 %       element d+2: sigma_n
 %    j - hyperparameter
 
-D = numel(x1);
-
-d = x1 - x2;
+D = numel(d);
 u = sqrt(d' * diag(1 ./ (theta(1:D) .^2)) * d);
 
 % d/dl sigma_f * exp(-u) = sigma_f * exp(-u) * -(1/(2 * sqrt(sum(d^2/ll^2)))) * (-2 d_j^2 / l_j^3)
@@ -55,17 +53,15 @@ out = theta(D+1)^2 * (exp(-u) / u) * (d(j)^2 / theta(j)^3);
 
 
 
-function out = dk_func_sigma_f(x1, x2, theta)
+function out = dk_func_sigma_f(d, theta)
 % Derivative of Matern covariance function with respect to sigma_f hyperparameter
-%    x1 - first coordinate
-%    x2 - second coordinate
+%    d - difference in coordinates
 %    theta - the array of coordinates that can be changed.
 %       elements 1:d :  l, a vector of scaling params
 %       element d+1: sigma_f
 %       element d+2: sigma_n
 
-D = numel(x1);
-d = x1 - x2;
+D = numel(d);
 sigma_f = theta(D+1);
 out = 2 * sigma_f * exp( - sqrt( d' * diag(1 ./ (theta(1:D) .^2)) * d ));
 
