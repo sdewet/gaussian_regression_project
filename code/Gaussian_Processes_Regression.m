@@ -8,9 +8,9 @@ stdev_y = std(y);
 
 %Strategy 1: Keep those rows for which mean_y - stdev_y <= y <= mean_y +
 %stdev_y
-y_outliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
-Pruned_X = X(y_outliers, :);
-Pruned_y = y(y_outliers);
+y_inliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
+Pruned_X = X(y_inliers, :);
+Pruned_y = y(y_inliers);
 
 
 %Strategy 2: Keep those rows for which y <= mean_y - stdev_y and y >= 
