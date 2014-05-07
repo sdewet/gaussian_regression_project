@@ -1,4 +1,4 @@
-function Gaussian_Processes_Regression(windowSize, cov_type)
+function Gaussian_Processes_Regression(windowSize, cov_type, strategy_type)
 
 %Call readProcessedData to get our data from the file into y and X 
 [y, X] = readProcessedData();
@@ -6,22 +6,19 @@ function Gaussian_Processes_Regression(windowSize, cov_type)
 mean_y = mean(y);
 stdev_y = std(y);
 
-%Strategy 1: Keep those rows for which mean_y - stdev_y <= y <= mean_y +
-%stdev_y
-% y_inliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
-% Pruned_X = X(y_inliers, :);
-% Pruned_y = y(y_inliers);
-
-
-%Strategy 2: Keep those rows for which y <= mean_y - stdev_y and y >= 
-%mean_y + stdev_y
-% y_outliers = y <= (mean_y - stdev_y) & y >= (mean_y + stdev_y);
-% Pruned_X = X(y_outliers, :);
-% Pruned_y = y(y_outliers);
-
-%Strategy 3: No strategies
-Pruned_X = X;
-Pruned_y = y;
+switch cov_type
+	case 1 %Strategy 1: Keep those rows for which mean_y - stdev_y <= y <= mean_y + stdev_y
+		y_inliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
+		Pruned_X = X(y_inliers, :);
+		Pruned_y = y(y_inliers);
+	case 2 %Strategy 2: Keep those rows for which y <= mean_y - stdev_y and y >=  mean_y + stdev_y
+		y_outliers = y <= (mean_y - stdev_y) & y >= (mean_y + stdev_y);
+		Pruned_X = X(y_outliers, :);
+		Pruned_y = y(y_outliers);
+	case 0 % aka Strategy 3:  No strategies
+		Pruned_X = X;
+		Pruned_y = y;
+end
 
 %Calculate the mean and std_dev of the pruned X and y
 mean_Pruned_X = mean(Pruned_X,1);
@@ -43,7 +40,13 @@ X_Window = Design_X(:,1:windowSize); y_Window = Design_y(1:windowSize);
 ctr = windowSize;
 
 %Select the hyper-parameters
-hyper_params_mat = load('theta_oh_250.mat');
+hyper_params = hyper_params_mat.theta(:);
+switch cov_type
+case 1
+	hyper_params_mat = load('theta_se_500.mat');
+case 2
+	hyper_params_mat = load('theta_oh_500.mat');
+end
 hyper_params = hyper_params_mat.theta(:);
 %sigma_f = 1.0; sigma_n = 0.1;
 %l = ones(size(X_Window,1),1)';   %All characteristic length scales are initialized to 1
@@ -160,7 +163,7 @@ while (ctr < (windowSize + 500))
 end %end of while
 
 fileName = 'Predicted_yValues';
-fileName = strcat(fileName, '_', num2str(windowSize),'_', num2str(cov_type), '.txt');
+fileName = strcat(fileName, '_', num2str(windowSize),'_', num2str(cov_type), 'trained_with_500vals__', num2str(strategy_type),'.txt');
 writeFile(Predicted_yValues, fileName);
 end %end of function
 
