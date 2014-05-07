@@ -148,7 +148,12 @@ while (ctr < (windowSize + 500))
                 error('Wrong covariance function type. Please try again!');                    
         end
     end
-    L = chol(K, 'lower');
+    try
+        L = chol(K, 'lower');
+    catch exception
+	save('K','K');
+        L = inv(K + 1e-5 * abs(normrnd(0, 1, size(K))));
+    end
     alpha = L'\(L\y_Window');
     %We need to rescale the predicted y by adding back the mean
     predicted_y = (k_star' * alpha) + mean_Pruned_y;      % Also, our predicted change in price is the mean of the gaussian posterior
