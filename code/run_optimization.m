@@ -1,4 +1,4 @@
-function [theta, y_val] = run_optimization()
+function [theta, y_val] = run_optimization(type, set, amt, num)
 
 %Call readProcessedData to get our data from the file into y and X
 [y, X] = readProcessedData();
@@ -20,17 +20,17 @@ D = size(X, 2);
 theta = zeros(D+2,4,3);
 fval = zeros(4,3);
 
-randSet = randperm(N, 100);
+randSet = randperm(10000, amt);
 
-for cov_type = 1:4
-    for data_set = 1:3
+for cov_type = type:type
+    for data_set = set:set
         switch data_set
             case 1 % Data between 1 and 100
-                set = 1:100;
+                set = 1:amt;
                 X_set = Scaled_X(set,:);
                 y_set = Scaled_y(set);
             case 2 % Data between 8001 and 8100
-                set = 8001:8100;
+                set = 8001:8000+amt;
                 X_set = Scaled_X(set,:);
                 y_set = Scaled_y(set);
             case 3 % Randomly selected data
@@ -57,20 +57,25 @@ for cov_type = 1:4
             local_optimizers(:,iter) = t;
             novel = true;
             for i = 1:iter-1
-                if (norm(t - local_optimizers(:,i)) < 1e-2)
+                if (norm(t - local_optimizers(:,i)) < 1e-1)
                     novel = false;
                 end
             end
             if (novel == true)
                 lastNovel = iter;
             end
+	    fprintf('current optimum: %f', f);
+	    fprintf('current optimzer:');
+	    t'
+	    save(['optimized_t', num2str(num)], 't')
+	    save(['optimized_f', num2str(num)], 'f')
         end
         [m, i] = max(local_optima);
-        theta(:, cov_type, data_set) = m;
-        fval(:, cov_type, data_set) = local_optima(:,i);
+        theta(:, cov_type, data_set) = local_optimizers(:,i);
+        fval(:, cov_type, data_set) = local_optima(i);
         fprintf('local optimum: %f', m);
     end
 end
 
-save('optimized_theta', 'theta')
-save('optimized_fval', 'fval')
+save(['optimized_theta', num2str(num)], 'theta')
+save(['optimized_fval', num2str(num)], 'fval')
