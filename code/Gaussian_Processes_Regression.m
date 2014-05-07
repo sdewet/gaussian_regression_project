@@ -43,8 +43,12 @@ X_Window = Design_X(:,1:windowSize); y_Window = Design_y(1:windowSize);
 ctr = windowSize;
 
 %Select the hyper-parameters
-sigma_f = 1.0; sigma_n = 0.1;
-l = ones(size(X_Window,1),1)';   %All characteristic length scales are initialized to 1
+hyper_params_mat = load('theta_oh_250.mat');
+hyper_params = hyper_params_mat.theta(:);
+%sigma_f = 1.0; sigma_n = 0.1;
+%l = ones(size(X_Window,1),1)';   %All characteristic length scales are initialized to 1
+l = hyper_params(1:27,1)';
+sigma_f = hyper_params(28); sigma_n = hyper_params(29);
 
 %Check to see whether K is stored. If not, build the matrix from scratch
 num_examples = size(X_Window,2);
@@ -86,7 +90,6 @@ end
 
 
 %Train the hyperparameters of the initial K matrix
-
 
 Predicted_yValues = [];
 while (ctr < size(Design_X,2))        
