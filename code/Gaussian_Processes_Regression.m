@@ -92,7 +92,8 @@ end
 %Train the hyperparameters of the initial K matrix
 
 Predicted_yValues = [];
-while (ctr < size(Design_X,2))        
+%while (ctr < size(Design_X,2))        
+while (ctr < (windowSize + 500))        
     
     %Build the delta Gram matrix
     if (ctr ~= windowSize)
