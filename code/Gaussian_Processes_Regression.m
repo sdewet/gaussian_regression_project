@@ -6,7 +6,10 @@ function Gaussian_Processes_Regression(windowSize, cov_type, strategy_type)
 mean_y = mean(y);
 stdev_y = std(y);
 
-switch cov_type
+switch strategy_type
+	case 0 % aka Strategy 3:  No strategies
+		Pruned_X = X;
+		Pruned_y = y;
 	case 1 %Strategy 1: Keep those rows for which mean_y - stdev_y <= y <= mean_y + stdev_y
 		y_inliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
 		Pruned_X = X(y_inliers, :);
@@ -15,9 +18,8 @@ switch cov_type
 		y_outliers = y <= (mean_y - stdev_y) & y >= (mean_y + stdev_y);
 		Pruned_X = X(y_outliers, :);
 		Pruned_y = y(y_outliers);
-	case 0 % aka Strategy 3:  No strategies
-		Pruned_X = X;
-		Pruned_y = y;
+	otherwise
+		fprintf('error: invalid strategy');
 end
 
 %Calculate the mean and std_dev of the pruned X and y
@@ -40,12 +42,13 @@ X_Window = Design_X(:,1:windowSize); y_Window = Design_y(1:windowSize);
 ctr = windowSize;
 
 %Select the hyper-parameters
-hyper_params = hyper_params_mat.theta(:);
 switch cov_type
 case 1
 	hyper_params_mat = load('theta_se_500.mat');
 case 2
 	hyper_params_mat = load('theta_oh_500.mat');
+otherwise
+	fprintf('error: invalid cov type');
 end
 hyper_params = hyper_params_mat.theta(:);
 %sigma_f = 1.0; sigma_n = 0.1;
@@ -57,7 +60,7 @@ sigma_f = hyper_params(28); sigma_n = hyper_params(29);
 num_examples = size(X_Window,2);
 K = zeros(num_examples);
 fileName = 'K_Matrix';
-fileName = strcat(fileName, '_', num2str(windowSize),'_', num2str(cov_type), '.txt');
+fileName = strcat(fileName, '_', num2str(windowSize),'_', num2str(cov_type), 'trained_with_500vals__', num2str(strategy_type),'.txt');
 path = '../data/';
 if exist([path fileName], 'file')
    K = dlmread([path fileName],'\t');
