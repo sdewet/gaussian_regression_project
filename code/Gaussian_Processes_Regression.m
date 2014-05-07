@@ -8,9 +8,9 @@ stdev_y = std(y);
 
 %Strategy 1: Keep those rows for which mean_y - stdev_y <= y <= mean_y +
 %stdev_y
-y_inliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
-Pruned_X = X(y_inliers, :);
-Pruned_y = y(y_inliers);
+% y_inliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
+% Pruned_X = X(y_inliers, :);
+% Pruned_y = y(y_inliers);
 
 
 %Strategy 2: Keep those rows for which y <= mean_y - stdev_y and y >= 
@@ -20,8 +20,8 @@ Pruned_y = y(y_inliers);
 % Pruned_y = y(y_outliers);
 
 %Strategy 3: No strategies
-% Pruned_X = X;
-% Pruned_y = y;
+Pruned_X = X;
+Pruned_y = y;
 
 %Calculate the mean and std_dev of the pruned X and y
 mean_Pruned_X = mean(Pruned_X,1);
@@ -156,6 +156,7 @@ while (ctr < size(Design_X,2))
 end %end of while
 
 fileName = 'Predicted_yValues.txt';
+fileName = strcat(fileName, '_', num2str(windowSize),'_', num2str(cov_type), '.txt');
 writeFile(Predicted_yValues, fileName);
 end %end of function
 
