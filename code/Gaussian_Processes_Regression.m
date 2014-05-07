@@ -14,8 +14,8 @@ switch strategy_type
 		y_inliers = (mean_y - stdev_y) <= y & y <= (mean_y + stdev_y);
 		Pruned_X = X(y_inliers, :);
 		Pruned_y = y(y_inliers);
-	case 2 %Strategy 2: Keep those rows for which y <= mean_y - stdev_y and y >=  mean_y + stdev_y
-		y_outliers = y <= (mean_y - stdev_y) & y >= (mean_y + stdev_y);
+	case 2 %Strategy 2: Keep those rows for which y <= mean_y - stdev_y OR y >=  mean_y + stdev_y
+		y_outliers = y <= (mean_y - stdev_y) | y >= (mean_y + stdev_y);
 		Pruned_X = X(y_outliers, :);
 		Pruned_y = y(y_outliers);
 	otherwise
