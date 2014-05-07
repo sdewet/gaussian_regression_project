@@ -158,7 +158,7 @@ while (ctr < size(Design_X,2))
 
 end %end of while
 
-fileName = 'Predicted_yValues.txt';
+fileName = 'Predicted_yValues';
 fileName = strcat(fileName, '_', num2str(windowSize),'_', num2str(cov_type), '.txt');
 writeFile(Predicted_yValues, fileName);
 end %end of function
