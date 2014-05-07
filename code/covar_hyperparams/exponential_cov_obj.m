@@ -6,7 +6,7 @@ if exist('debug.txt','file')
 	keyboard
 end
 
-K = K_mat(theta);
+K = K_mat(X, theta);
 try
 	Kinv = pinv(K);
 catch exception
