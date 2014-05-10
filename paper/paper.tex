@@ -70,6 +70,7 @@ We will attempt to build a model which calculates $\delta_t$ when given $P_t$, t
 Our algorithm could be divided into 4 major parts - preprocessing the data, building the covariance matrix, tuning the hyperparameters, learning the GP model using a windowing technique and finally predicting the change in stock price for the next time instance using the learned GP model. 
 
 \subsection{Pre-processing}
+\label{sec:strategy}
 
 We experiment with 3 different strategies to build our training set from the available dataset. In the first strategy we prune out all data points that were more than one standard deviation away from the sample mean $\bf\bar{y}$. In the second strategy we prune out all data points that were within one standard deviation from the sample mean $\bf\bar{y}$. And for the third strategy, we keep all data points. After applying any one of the above strategies to the data, we linearly scale the inputs to have zero mean and unit variance on the training set. We also centered the corresponding target outputs so as to have zero mean on the training set.
 
@@ -86,10 +87,10 @@ Let
 
 Then, the covariance functions are:
 \begin{align}
-	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- \frac{1}{2} u^2} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Squared Exponential}   \\
-	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Exponential}   \\
-	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{3} u \right) \exp{- \sqrt{3}  u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Matern ($\nu = \frac{3}{2}$) }   \\
-	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{5} u \right) + 5 u^2) \exp{- \sqrt{5} u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Matern ($\nu = \frac{5}{2}$) }
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- \frac{1}{2} u^2} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{(Squared Exponential)}   \\
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{(Ornstein–Uhlenbeck)}   \\
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{3} u \right) \exp{- \sqrt{3}  u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{(Matern - $\nu = \frac{3}{2}$)}   \\
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{5} u \right) + 5 u^2) \exp{- \sqrt{5} u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{(Matern  - $\nu = \frac{5}{2}$)}
 \end{align}
 
 $\sigma_n^2$ and $\sigma_f^2$ are the noise and signal level parameters, respectively, and $l_1, \dots, l_D$ are characteristic length-scales.
@@ -140,11 +141,56 @@ where,
 \mbox{cov}(\boldsymbol{f_*}) &= \boldsymbol{K}\left(\boldsymbol{X_*}, \boldsymbol{X_*}\right) - \boldsymbol{K}\left(\boldsymbol{X_*}, \boldsymbol{X}\right) \left[ \boldsymbol{K}\left(\boldsymbol{X}, \boldsymbol{X}\right) + \sigma_n^2\boldsymbol{I}\right]^{-1} \boldsymbol{K}\left(\boldsymbol{X}, \boldsymbol{X_*}\right)
 \end{align}
 
-
 Finally we scale the predicted value back by adding the sample mean - $\bf\bar{y}$, of the target vector to our prediction.
 
-\section{Conclusion}
+\section{Experiments}
 
+\subsection{Covariance Type}
+For this experiment, we use $\mathcal{T} = 20000$, with Strategy 3, and try to predict 500 ms into the future.
+We found that squared exponential and the Matern function with $\nu = \frac{5}{2}$ predicted nearly a straight line, with very small variations.
+The Matern functio wiht $\nu = \frac{3}{2}$ and Ornstein–Uhlenbeck functions' predictions are shaped more like the actual data, with sharp peaks and valleys.
+
+The Ornstein-Uhlenbeck model seems to fit the data the best, so we use it for all future experiments.
+
+% Zoom plot in - 50-100??
+
+
+\subsection{Window size}
+Next, we experimented with varying window size $\mathcal{T}$, while using Strategy 3 and predicting 500 ms into the future.
+We found that the larger windows predicted the dominant trend much better, and had fewer peaks and valleys.
+However, the peaks and valleys that the larger windows predicted were, on average, more likely to be correct.
+
+\subsection{Strategy Type}
+We tried several different strategies (described in \ref{sec:strategy}).
+\begin{table}[h]
+	\label{t:miss}
+	\centering
+	\caption{Earnings from different strategies}
+	\begin{tabular}{| l | l |}
+	\hline
+	Strategy & Earnings \\
+	\hline
+	1 & 42.88 \\
+	2 & 28.39 \\
+	3 & 3.86 \\
+	\hline
+	\end{tabular}
+\end{table}
+
+
+\subsection{Future time}
+In experiments up to this point, we used data that had been processed so that the y values are the change in stock price 500 ms in the future.
+Next, we re-processed the data to have y values 800 ms or 1000 ms in the future.
+We found that we got roughly the same results for each experiment, suggesting that we are equally capable of predicting on each of these time scales into the future.
+
+If we had more time, we would run additional experiments further into the future, to see how far ahead we can predict before our predictions get notably worse.
+
+
+\subsection{Comparisons to other models}
+The dataset that we used came with linear regression and PCA regression models, trained on a much larger version of the same dataset.
+Although the experiments are not trained and tested in the same way, we give a broad comparison to their results, to show that we performed similarly well.
+
+\section{Conclusion}
 The results from our experiments indicate that GP models could learn the correlations hidden among financial data to a very high degree when compared to other traditional ML algorithms like linear regression and PCA regression. But the biggest drawback of GP models as implemented in our application is the computation time that is required for the GP modeling. Regression based on GP models involve a huge amount of matrix inversions, the complexity of which is to the order of $\mathcal{O}(n^3)$. These computational needs, restricted the amount of training data that could be used, to a maximum of only 20000 training samples, even though we had access to around 2GB of stock price data that we would have liked to use during training. Several authors have suggested sparse approximation approaches for calculating the covariance matrix, which we believe is a promising direction for future work. 
 
 \subsubsection*{Acknowledgments}

@@ -21,14 +21,16 @@ close all;
 
 plotNum = 1;
 folder = '../data/data_20000_500_500_0/';
-files = cell(1,3);
+files = cell(1,4);
 files{1} = 'Predicted_yValues_20000_1trained_with_500vals__0.txt';
-files{2} = 'Predicted_yValues_20000_3trained_with_500vals__0.txt';
-files{3} = 'Predicted_yValues_20000_4_trained_with_500vals_rand_0.txt';
-labels = cell(1,3);
+files{2} = 'Predicted_yValues_20000_2trained_with_500vals__0.txt';
+files{3} = 'Predicted_yValues_20000_3trained_with_500vals__0.txt';
+files{4} = 'Predicted_yValues_20000_4_trained_with_500vals_rand_0.txt';
+labels = cell(1,4);
 labels{1} = '10 * Predictions with Squared Exponential';
-labels{2} = '10 * Predictions with Matern \nu = 3/2';
-labels{3} = '10 * Predictions with Matern \nu = 5/2';
+labels{2} = '10 * Predictions with Ornstein-Ulenbeck';
+labels{3} = '10 * Predictions with Matern \nu = 3/2';
+labels{4} = '10 * Predictions with Matern \nu = 5/2';
 titl = 'Different covariance functions, trained with 20000 samples';
 xlabl = 'Testing Value #';
 ylabl = 'Change in price';
@@ -63,15 +65,21 @@ if exist([p, 'processed_data.txt'], 'file')
     plot (x, y_result','b', ...
         x, 10*yPredicted(1,:),'--c', ...
         x, 10*yPredicted(2,:),'--r', ...
-        x, 10*yPredicted(3,:),'--g'); %, ...
-        % x, 10*yPredicted(3,:), 'y*');
+        x, 10*yPredicted(3,:),'--g', ...
+        x, 10*yPredicted(4,:), '--y');
         
     title(titl)
     xlabel(xlabl)
     ylabel(ylabl)
-    legend('Test values', labels{1}, labels{2}, labels{3})%, labels{4})
+    legend('Test values', labels{1}, labels{2}, labels{3}, labels{4})
 
     saveas(gcf, ['fig_', num2str(plotNum), '.png']);
+    
+    plot ( ...
+        x, log((y_result' - yPredicted(1,:)).^2),'--c', ...
+        x, log((y_result' - yPredicted(2,:)).^2),'--r', ...
+        x, log((y_result' - yPredicted(3,:)).^2),'--g', ...
+        x, log((y_result' - yPredicted(3,:)).^2),'--y');
 end
 
 
@@ -171,9 +179,9 @@ title('Strategy 1')
 xlabel(xlabl)
 ylabel(ylabl)
 subplot(3,1,3);
-title('Strategy 2')
 plot(x, y_result(3,:),'b', ...
     x, 10*yPredicted(3,:),'--g');
+title('Strategy 2')
 xlabel(xlabl)
 ylabel(ylabl)
 saveas(gcf, ['fig_', num2str(plotNum), '.png']);
@@ -181,35 +189,41 @@ saveas(gcf, ['fig_', num2str(plotNum), '.png']);
 
 %LR, NN, PCA Reg vs GPR. Keep window size fixed at 20000, timesecs_diff at 500,
 %strategy_type fixed at 0 and Ornstein-Uhlenbeck covariance function 
-barnames = ['Predicted_yValues_10000_2trained_with_500vals__0.txt'; ...
-'Predicted_yValues_15000_2trained_with_500vals__0_1000msecs_diff.txt'; ...
-'Predicted_yValues_15000_1trained_with_500vals__0.txt'; ...
-'Predicted_yValues_15000_2trained_with_500vals__0.txt'; ...
-'Predicted_yValues_15000_2trained_with_500vals__0_500msecs_diff.txt'; ... 
-'Predicted_yValues_15000_2trained_with_500vals__1.txt'; ...
-'Predicted_yValues_15000_2_trained_with_500vals__0__msecs800.txt'; ...
-'Predicted_yValues_20000_1trained_with_500vals__0.txt'; ...
-'Predicted_yValues_20000_3trained_with_500vals__0.txt'; ...
-'Predicted_yValues_20000_4_trained_with_500vals_rand_0.txt'; ...
-'Predicted_yValues_3000_1trained_with_500vals__2.txt'; ...
-'Predicted_yValues_3000_2trained_with_500vals__2.txt'];
+close all;
+plotNum = 4;
+barnames = cell(12,1);
+barnames{1} = 'Predicted_yValues_10000_2trained_with_500vals__0.txt';
+barnames{2} = 'Predicted_yValues_15000_2trained_with_500vals__0_1000msecs_diff.txt';
+barnames{3} = 'Predicted_yValues_15000_1trained_with_500vals__0.txt';
+barnames{4} = 'Predicted_yValues_15000_2trained_with_500vals__0.txt';
+barnames{5} = 'Predicted_yValues_15000_2trained_with_500vals__0_500msecs_diff.txt';
+barnames{6} = 'Predicted_yValues_15000_2trained_with_500vals__1.txt';
+barnames{7} = 'Predicted_yValues_15000_2_trained_with_500vals__0__msecs800.txt';
+barnames{8} = 'Predicted_yValues_20000_1trained_with_500vals__0.txt';
+barnames{9} = 'Predicted_yValues_20000_3trained_with_500vals__0.txt';
+barnames{10} = 'Predicted_yValues_20000_4_trained_with_500vals_rand_0.txt';
+barnames{11} = 'Predicted_yValues_3000_1trained_with_500vals__2.txt';
+barnames{12} = 'Predicted_yValues_3000_2trained_with_500vals__2.txt';
 
-bars = [11.08, -10.96, 3.80; ...
-    3.86, 4.14, 4.02; ...
-    3.86, 4.14, 4.02; ...
-    3.86, 4.14, 4.02; ...
-    3.86, 4.14, 4.02; ...
-    42.88, -57.00, -74.32; ...
-    3.86, 4.14, 4.02; ...
-    12.87, -8.92, -16.53; ...
-    12.87, -8.92, -16.53; ...
-    12.87, -8.92, -16.53; ...
-    28.39, -61.22, -76.70; ...
-    28.39, -61.22, -76.70];
-legend('Our model', 'LM', 'PCA\_reg');
-
+bars = [11.08, -10.96, 3.80; ... %0
+    3.86, 4.14, 4.02; ... %1
+    3.86, 4.14, 4.02; ... %2 
+    3.86, 4.14, 4.02; ... %3
+    3.86, 4.14, 4.02; ... %4
+    42.88, -57.00, -74.32; ... %5
+    3.86, 4.14, 4.02; ... %6
+    12.87, -8.92, -16.53; ... %7
+    12.87, -8.92, -16.53; ... %8
+    12.87, -8.92, -16.53; ... %9
+    28.39, -61.22, -76.70; ... %10
+    28.39, -61.22, -76.70]; %11
 bar(1:12, bars)
+legend('Our model', 'LM', 'PCA\_reg');
+title('Profit');
+xlabel('Experiment #');
+ylabel('Profit');
 
+saveas(gcf, ['fig_', num2str(plotNum), '.png']);
 
 clear;
 plotNum = 5;
@@ -254,9 +268,9 @@ title(labels{2})
 xlabel(xlabl)
 ylabel(ylabl)
 subplot(3,1,3);
-title(labels{3})
 plot(x, y_result(3,:),'b', ...
     x, 10*yPredicted(3,:),'--g');
+title(labels{3})
 xlabel(xlabl)
 ylabel(ylabl)
 saveas(gcf, ['fig_', num2str(plotNum), '.png']);
