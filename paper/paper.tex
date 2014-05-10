@@ -6,7 +6,7 @@
 %\documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
 
 
-\title{Formatting Instructions for NIPS 2014}
+\title{Applying Gaussian Process Regression to Predict Changes in Stock Price}
 
 
 \author{
@@ -47,7 +47,7 @@ Madison, WI 53705 \\
 \end{abstract}
 
 \section{Introduction}
-In stock markets, investors need long-term forecasting techniques to choose the right time to buy/sell stocks to maximize their profits or to minimize their loss. The majority of existing stock market forecasting techniques rely on machine learning tools and the accuracy of these tools is still a significant challenge for market traders considering the several external factors which affect the stock market. In this project we have tried to forecast change in price of a single stock using the Gaussian Processes (GP) model. We have also investigated the use of Gaussian processes with different covariance functions to model real world temporal patterns. We 
+In stock markets, investors need long-term forecasting techniques to choose the right time to buy/sell stocks to maximize their profits or to minimize their loss. The majority of existing stock market forecasting techniques rely on machine learning tools and the accuracy of these tools is still a significant challenge for market traders considering the several external factors which affect the stock market. In this project we have tried to forecast change in price of a single stock using the Gaussian Processes (GP) model.
 
 \section{Initial Data Processing}
 Our data set consists of information collected on a single stock, including instantaneous stock prices and instantaneous values of 27 parameters ($P$) known to have some affect on the price.
@@ -56,8 +56,8 @@ Our goal is to predict the stock price in the near future, given current values 
 
 First, we create labeled data to use in training our models using the following process:
 We sort the data set in increasing time.
-For each line, we define $\delta$, the difference in stock price after \textbf{t} milliseconds, to be the current stock price subtracted from the stock price that is associated with the datapoint that is closest to \textbf{t} milliseconds in the future.
-(Note that our datapoints are roughly 500 milliseconds apart, so we can expect that the variation in distance between sets of data points will be much less than modeling error.)
+For each line, we define $\delta$, the difference in stock price after \textbf{t} milliseconds, to be the current stock price subtracted from the stock price that is closest to \textbf{t} milliseconds in the future.
+%(Note that our datapoints are close enough together that the difference in time between sets of data points will be much less than modeling error.)
 We will attempt to build a model which calculates $\delta_t$ when given $P_t$, the values of the 27 parameters at time $t$.
 
 % Note to self: this is done in strategy 
@@ -67,7 +67,7 @@ We will attempt to build a model which calculates $\delta_t$ when given $P_t$, t
 
 \section{Algorithm}
 
-Our algorithm could be divided into 4 major parts - preprocessing the data, building the covariance matrix, tuning the hyperparameters, learning the GP model using a windowing technique and finally predicting the change in stock price for the next time instant using the learned GP model. 
+Our algorithm could be divided into 4 major parts - preprocessing the data, building the covariance matrix, tuning the hyperparameters, learning the GP model using a windowing technique and finally predicting the change in stock price for the next time instance using the learned GP model. 
 
 \subsection{Pre-processing}
 
@@ -75,10 +75,10 @@ We experiment with 3 different strategies to build our training set from the ava
 
 \subsection{Building the Covariance Matrix}
 
-We initially build the covariance matrix - $K$ using the first $T$ samples, i.e using the samples starting at $t = 0$ till $t = T$. While building $K$, we have experimented with a few interesting covariance functions as described below:  
+We initially build the covariance matrix $K$ using the first $\mathcal{T}$ samples, i.e using the samples from $t = 0$ to $t = \mathcal{T}$. While building $K$, we have experimented with a few interesting covariance functions as described below:  
 
 \subsubsection{Covariance Functions}
-We consider 4 different covariance functions, all of which can be parameterized in terms of the hyperparameters $\bftheta = \{\bfl, \sigma_n^2 \sigma_f^2\}$:
+We consider 4 different covariance functions, all of which can be parameterized in terms of the hyperparameters $\bftheta = \{\bfl, \sigma_n^2 \sigma_f^2\}$, where $\bfl$ is a length 27 vector.
 Let
 \begin{equation}
 	u = \left( \left( \bfx_p - \bfx_q \right)^\top \diag(\bfl)^{-2} \left( \bfx_p - \bfx_q \right) \right)^{1/2}
@@ -88,7 +88,7 @@ Then, the covariance functions are:
 \begin{align}
 	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- \frac{1}{2} u^2} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Squared Exponential}   \\
 	k(\bfx_p, \bfx_q) &= \sigma_f^2 \exp{- u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Exponential}   \\
-	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{3} u \right) \exp{- sqrt{3}  u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Matern ($\nu = \frac{3}{2}$) }   \\
+	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{3} u \right) \exp{- \sqrt{3}  u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Matern ($\nu = \frac{3}{2}$) }   \\
 	k(\bfx_p, \bfx_q) &= \sigma_f^2 \left( 1 + \sqrt{5} u \right) + 5 u^2) \exp{- \sqrt{5} u} + \sigma_n \delta_{pq} \quad \quad \quad \mbox{Matern ($\nu = \frac{5}{2}$) }
 \end{align}
 
@@ -99,29 +99,37 @@ This is a type of automatic relevance determination (ARD).
 
 
 \subsection{Tuning the hyperparameters}
-We tuned the hyperparameters by maximizing the log marginal likelihood, 
+For the covariance matrices above, we tuned the hyperparameters by maximizing the log marginal likelihood, 
 \begin{equation}
 	\log p(\bfy | X, \bftheta) = - \frac{1}{2} \bfy^\top K_y^{-1} \bfy - \frac{1}{2} \log \| K_y \| - \frac{n}{2} \log (2 \pi)
 \end{equation}
 
-Russell and Williams state that the maximum of this quantity is generally more pronounced for larger numbers of data points.
+Rasmussen and Williams state that the maximum of this quantity is generally more pronounced for larger numbers of data points.
 They also note that this function is not concave, and so there could be multiple local optima.
 However, they suggest that for larger data sets, one local optimum will generally be orders of magnitude more probable than the others, and that this can generally be assumed to be the correct choice of hyperparameters.
 
 For all except the exponential function, we calculate the gradient $\frac{\partial K} {\partial \bftheta}$ and use a gradient-based descent method.
-
 Note that $K_y \in \R^{n \times n}$ must be recalculated at each step of the optimization.
 As the size of the data set grows, this becomes increasingly intractable.
-Therefore, we follow the suggestion of Russell \& Williams in their example (Ch 2), and optimize the hyperparameters based on a smaller subset of the data. We assume that there are temporal trends within the data, and thus calculate the marginal likelihood using the first 500 data points from the training set which we then feed as input to our optimizer. After we obtain the optimized set of hyperparameters, the same set is employed in all our experiments.
+Therefore, we follow the suggestion of Rasmussen \& Williams in their example (Ch 2), and optimize the hyperparameters based on a smaller subset of the data.
+
+We calculated the marginal likelihood using the first 500 data points from the training set, and also using 500 random data points from the training set.
+We found that the K matrix was ill-conditioned when we used 500 random data points, so we did not use these values in our experiments.
+Ideally, we would have used a larger dataset and more random restarts, but we were unable to do so due to time constraints.
+We believe this is one of the major sources of error in our project.
+After we obtain the optimized set of hyperparameters, the same set is employed in all our experiments.
+
+We observed that the resultant $\bfl$ parameters had very large values in the majority of their coefficients and smaller values for a limited subset of components.
+This means that a limited number of components have a larger correlation with the target value.
 
 
 \subsection{Learning the GP Model}
 
-We have applied a windowing technique to learn a GP on the data. We use the covariance matrix built using data from $t = 0$ till $t = \mathcal{T}$, to predict the change in stock price at time instant $t = \mathcal{T}+1$. Once the prediction is made, we use the input vector at $t = \mathcal{T}+1$ and the \textbf{\textit{predicted}} change in price at that instant as a new data point and compute the covariance matrix again for the window from $t = 1$ till $t = \mathcal{T}+1$. We use this newly computed covariance matrix to predict the change in stock price at time instant $t=\mathcal{T}+2$. This process is repeated till time instant $t = \mathcal{T}+T$, where $T$ denotes how far ahead in future we want to keep predicting the change in stock prices. Since re-computing the covariance matrix for every window can be pretty time consuming, we compute only the last column / row of the covariance matrix as it corresponds to the time instant $t = \mathcal{T}+1$. In addition, we drop the row and column that correspond to the oldest time instant of the previous window, from the covariance matrix. This keeps the size of our covariance matrix constant (therefore, keeping the amount of computation required for inverting the covariance matrix constant across every window) while allowing us to re-use the other columns of the covariance matrix that correspond to the time instants common to the previous window and the current window.
+We have applied a windowing technique to learn a GP on the data. We use the covariance matrix built using data from $t = 0$ to $t = \mathcal{T}$, to predict the change in stock price at time $t = \mathcal{T}+1$. Once the prediction is made, we use the input vector at $t = \mathcal{T}+1$ and the \textbf{\textit{predicted}} change in price at that instance as a new data point and compute the covariance matrix again for the window from $t = 1$ to $t = \mathcal{T}+1$. We use this newly computed covariance matrix to predict the change in stock price at $t=\mathcal{T}+2$. This process is repeated until $t = \mathcal{T}+T$, where $T$ denotes how far ahead in future we want to keep predicting the change in stock prices. Since re-computing the covariance matrix for every window can be time consuming, we compute only the last column / row of the covariance matrix as it corresponds to the time instance $t = \mathcal{T}+1$. In addition, we drop the row and column that correspond to the oldest time instance of the previous window, from the covariance matrix. This keeps the size of our covariance matrix constant (therefore, keeping the amount of computation required for inverting the covariance matrix constant across every window) while allowing us to re-use the other columns of the covariance matrix that correspond to the time instances common to the previous window and the current window.
 
 \subsection{Prediction}
 
-We predict the change in stock price at the time instant immediately following our current time window, to be the \textbf{\textit{mean}} of the below conditional distribution:
+We predict the change in stock price at the time instance immediately following our current time window, to be the \textbf{\textit{mean}} of the below conditional distribution:
 
 \begin{equation}
  \boldsymbol{f_*} | \boldsymbol{X}, \boldsymbol{y}, \boldsymbol{X_*} \sim \mathcal{N}\left(\bar{\boldsymbol{f_*}}, \mbox{cov}(\boldsymbol{f_*})\right)
@@ -137,14 +145,12 @@ Finally we scale the predicted value back by adding the sample mean - $\bf\bar{y
 
 \section{Conclusion}
 
-The results from our experiments indicate that GP models could learn the correlations hidden among financial data to a very high degree when compared to other traditional ML algorithms like linear regression, PCA regression and neural networks. But the biggest drawback of GP models as implemented in our application is the computation time that is required for the GP modeling. Regression based on GP models involve a huge amount of matrix inversions, the complexity of which is to the order of $\mathcal{O}(n^3)$. These computational needs, restricted the amount of training data that could be used, to a maximum of only 20000 training samples, even though we had access to around 2GB of stock price data that we would have liked to use during training. Several authors have suggested various sparse approximation approaches towards calculating the covariance matrix in which they try to retain most of the information contained in the full dataset while reducing the size of the covariance matrix so as to facilitate a less demanding implementation of the GP model from the computational point of view.
+The results from our experiments indicate that GP models could learn the correlations hidden among financial data to a very high degree when compared to other traditional ML algorithms like linear regression and PCA regression. But the biggest drawback of GP models as implemented in our application is the computation time that is required for the GP modeling. Regression based on GP models involve a huge amount of matrix inversions, the complexity of which is to the order of $\mathcal{O}(n^3)$. These computational needs, restricted the amount of training data that could be used, to a maximum of only 20000 training samples, even though we had access to around 2GB of stock price data that we would have liked to use during training. Several authors have suggested sparse approximation approaches for calculating the covariance matrix, which we believe is a promising direction for future work. 
 
 \subsubsection*{Acknowledgments}
 Thanks to Jerry Zhu for an excellent class, and to Rasmussen and Willams for their excellent book.
 
-
 \subsubsection*{References}
-
 \small{
 }
 
