@@ -1,8 +1,8 @@
-function [y, X] = readProcessedData()
+function [y, X] = readProcessedData(dir)
 % Reads in data from the file and stores it as a matrix.
 addpath '../data/';
 
-fileName = 'processed_data.txt';
+fileName = [dir, 'processed_data.txt'];
 
 fileID = fopen(fileName,'r');
 formatSpec = '%f';
