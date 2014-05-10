@@ -3,10 +3,12 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{amsmath,amssymb}
+\usepackage[T1]{fontenc}
+%\usepackage{babel}
+
+
+
 %\documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
-
-
-\title{Applying Gaussian Process Regression to Predict Changes in Stock Price}
 
 
 \author{
@@ -15,13 +17,16 @@ Department of Computer Sciences\\
 University of Wisconsin - Madison \\
 Madison, WI 53705 \\
 \texttt{sdewet@cs.wisc.edu} \\
-\And
+\and
 Saswati De \\
 Department of Computer Sciences\\
 University of Wisconsin - Madison \\
 Madison, WI 53705 \\
 \texttt{sde@cs.wisc.edu} \\
 }
+
+\title{Applying Gaussian Process Regression to Predict Changes in Stock Price}
+
 
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
@@ -44,13 +49,14 @@ Madison, WI 53705 \\
 \maketitle
 
 \begin{abstract}
+Predicting stock prices is an interesting problem for machine learning researchers. In this paper we use Gaussian Processes to model the timeseries representing the change in price of a single stock. Our implementation of the GP model performed well in comparison to other regression models like Linear Regression and PCA Regression.
 \end{abstract}
 
 \section{Introduction}
 In stock markets, investors need long-term forecasting techniques to choose the right time to buy/sell stocks to maximize their profits or to minimize their loss. The majority of existing stock market forecasting techniques rely on machine learning tools and the accuracy of these tools is still a significant challenge for market traders considering the several external factors which affect the stock market. In this project we have tried to forecast change in price of a single stock using the Gaussian Processes (GP) model.
 
 \section{Initial Data Processing}
-Our data set consists of information collected on a single stock, including instantaneous stock prices and instantaneous values of 27 parameters ($P$) known to have some affect on the price.
+Our data set (obtained from http://www.tworoads.co.in/trading-competition) consists of information collected on a single stock, including instantaneous stock prices and instantaneous values of 27 parameters ($P$) known to have some affect on the price.
 These values are taken at many different time stamps.
 Our goal is to predict the stock price in the near future, given current values of the parameters.
 
@@ -194,10 +200,14 @@ Although the experiments are not trained and tested in the same way, we give a b
 The results from our experiments indicate that GP models could learn the correlations hidden among financial data to a very high degree when compared to other traditional ML algorithms like linear regression and PCA regression. But the biggest drawback of GP models as implemented in our application is the computation time that is required for the GP modeling. Regression based on GP models involve a huge amount of matrix inversions, the complexity of which is to the order of $\mathcal{O}(n^3)$. These computational needs, restricted the amount of training data that could be used, to a maximum of only 20000 training samples, even though we had access to around 2GB of stock price data that we would have liked to use during training. Several authors have suggested sparse approximation approaches for calculating the covariance matrix, which we believe is a promising direction for future work. 
 
 \subsubsection*{Acknowledgments}
-Thanks to Jerry Zhu for an excellent class, and to Rasmussen and Willams for their excellent book.
+Thanks to Prof. Zhu for an excellent class.
 
 \subsubsection*{References}
 \small{
-}
+C.E. Rasmussen \& C.K.I. Williams, Gaussian Processes for Machine Learning. \\
+David Mackay, Introduction to Gaussian Processes.\\
+Long-term Stock Market Forecasting using Gaussian Processes, Nando de Freitas.
+Dataset - http://www.tworoads.co.in/trading-competition}
+
 
 \end{document}
